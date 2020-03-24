@@ -8,6 +8,8 @@ import com.miaoshaproject.miaosha.error.BusinessException;
 import com.miaoshaproject.miaosha.error.EmBusinessError;
 import com.miaoshaproject.miaosha.service.UserService;
 import com.miaoshaproject.miaosha.service.model.UserModel;
+import com.miaoshaproject.miaosha.validator.ValidationResult;
+import com.miaoshaproject.miaosha.validator.ValidatorImplement;
 import org.apache.catalina.User;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -21,6 +23,8 @@ public class UserServiceImpl implements UserService {
     private UserDOMapper userDOMapper;
     @Autowired
     private UserPasswordDOMapper userPasswordDOMapper;
+    @Autowired
+    private ValidatorImplement validator;
 
     public UserModel getUserById(Integer id) {
         UserDO userDO = userDOMapper.selectByPrimaryKey(id);
@@ -37,10 +41,14 @@ public class UserServiceImpl implements UserService {
         if(userModel == null){
             throw new BusinessException(EmBusinessError.PARAM_INVALID);
         }
-        if(StringUtils.isEmpty(userModel.getName()) || userModel.getGender()==null
-            || userModel.getAge()==null
-            || StringUtils.isEmpty(userModel.getTelephone())){
-            throw new BusinessException(EmBusinessError.PARAM_INVALID);
+//        if(StringUtils.isEmpty(userModel.getName()) || userModel.getGender()==null
+//            || userModel.getAge()==null
+//            || StringUtils.isEmpty(userModel.getTelephone())){
+//            throw new BusinessException(EmBusinessError.PARAM_INVALID);
+//        }
+        ValidationResult result = validator.validate(userModel);
+        if(result.isHasErrors()){
+            throw new BusinessException(EmBusinessError.PARAM_INVALID, result.getErrorMsg());
         }
         UserDO userDO= convertFromModel(userModel);
         userDOMapper.insertSelective(userDO);
